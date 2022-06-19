@@ -4,7 +4,11 @@ import type { AWS } from '@serverless/typescript';
 const serverlessConfiguration: AWS = {
   service: 'desafio-serverless',
   frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-offline'],
+  plugins: [
+    'serverless-esbuild',
+    'serverless-dynamodb-local',
+    'serverless-offline'
+  ],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
@@ -19,18 +23,45 @@ const serverlessConfiguration: AWS = {
   },
   // import the function via paths
   functions: { 
-    todo: {
-      handler: 'src/functions/todo.handler',
+    CreateTodo: {
+      handler: 'src/functions/CreateTodo.handler',
       events: [
         {
           http: {
-            path: 'todo',
-            method: 'get',
+            path: 'CreateTodo/{user_id}',
+            method: 'post',
+            request: {
+              parameters: {
+                paths: {
+                  user_id:true
+                }
+              }
+            },
             cors: true
           }
         }
       ]
-    } },
+    },
+    ListTodo: {
+      handler: 'src/functions/ListTodo.handler',
+      events: [
+        {
+          http: {
+            path: 'ListTodo/{user_id}',
+            method: 'get',
+            request: {
+              parameters: {
+                paths: {
+                  user_id:true
+                }
+              }
+            },
+            cors: true
+          }
+        }
+      ]
+    }
+  },
   package: { individually: true },
   custom: {
     esbuild: {
@@ -43,6 +74,14 @@ const serverlessConfiguration: AWS = {
       platform: 'node',
       concurrency: 10,
     },
+    dynamodb: {
+      stages: ['dev', 'local'],
+      start: {
+        port: 8000,
+        inMemory: true,
+        migrate: true
+      }
+    }
   },
   resources: {
     Resources: {
@@ -58,23 +97,13 @@ const serverlessConfiguration: AWS = {
             {
               AttributeName: "id",
               AttributeType: "S"
-            },
-            {
-              AttributeName: "user_id",
-              AttributeType: "S"
-            },
-            {
-              AttributeName: "title",
-              AttributeType: "S"
-            },
-            {
-              AttributeName: "done",
-              AttributeType: "BOOL"
-            },
+            }
+          ],
+          KeySchema: [
             {
               AttributeName: "id",
-              AttributeType: "S"
-            },
+              KeyType: "HASH"
+            }
           ]
         }
       }
