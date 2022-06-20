@@ -1,4 +1,5 @@
 import { APIGatewayProxyHandler } from "aws-lambda"
+import dayjs from "dayjs";
 import { document } from "../utils/dynamoDBClient";
 
 interface ICreateTodo {
@@ -18,7 +19,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             user_id,
             title,
             done: false,
-            deadline: new Date(deadline).getUTCDate(),
+            deadline: dayjs(deadline).format('DD/MM/YYYY') 
         }
     }).promise();
 
